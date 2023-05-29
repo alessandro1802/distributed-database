@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  cassandra1:
+    image: cassandra:4.1.1
+    container_name: cassandra1
+    environment:
+      - CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3
+    ports:
+      - "127.0.0.1:9042:9042"
+    volumes:
+      - ./cassandra1:/var/lib/cassandra
+    depends_on:
+      - cassandra2
+      - cassandra3
+
+  cassandra2:
+    image: cassandra:4.1.1
+    container_name: cassandra2
+    environment:
+      - CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3
+    volumes:
+      - ./cassandra2:/var/lib/cassandra
+
+  cassandra3:
+    image: cassandra:4.1.1
+    container_name: cassandra3
+    environment:
+      - CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3
+    volumes:
+      - ./cassandra3:/var/lib/cassandra
+
+  init-db:
+      image: cassandra:4.1.1
+      depends_on:
+        - cassandra1
+      restart: "no"
+      entrypoint: ["/scripts/init-db.sh"]
+      volumes:
+        - ./init-db.sh:/scripts/init-db.sh
