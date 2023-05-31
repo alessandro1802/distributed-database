@@ -7,4 +7,4 @@ done
 # Create a keyspace
 cqlsh -e "CREATE KEYSPACE cinema WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 2};"
 # Create a table
-cqlsh -e "USE cinema; CREATE TABLE booking (id UUID PRIMARY KEY, data text);"
+cqlsh -e "USE cinema; CREATE TABLE booking (id UUID PRIMARY KEY, first_name text, last_name text, movie_name text, reservation_timestamp timestamp, show_timestamp, room integer, seat integer);"
