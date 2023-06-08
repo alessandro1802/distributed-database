@@ -1,6 +1,3 @@
-# Cassandra nodes volumes
-cassandra*
-
 # Jupyter checkpoints
 .ipynb_checkpoints/
 
