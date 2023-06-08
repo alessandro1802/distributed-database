@@ -10,9 +10,15 @@ services:
       - "127.0.0.1:9042:9042"
     volumes:
       - cassandra1:/var/lib/cassandra
+      - ./scripts/init-db.cql:/scripts/init-db.cql
     depends_on:
       - cassandra2
       - cassandra3
+#    healthcheck:
+#        test: ["CMD", "cqlsh", "-u cassandra", "-p cassandra" ,"-e describe keyspaces"]
+#        interval: 15s
+#        timeout: 10s
+#        retries: 10
 
   cassandra2:
     image: cassandra:4.1.1
@@ -30,14 +36,18 @@ services:
     volumes:
       - cassandra3:/var/lib/cassandra
 
-  init-db:
-      image: cassandra:4.1.1
-      depends_on:
-        - cassandra1
-      restart: "no"
-      entrypoint: ["/scripts/init-db.sh"]
-      volumes:
-        - ./scripts/init-db.sh:/scripts/init-db.sh
+#  init-db:
+#      image: cassandra:4.1.1
+#      depends_on:
+##        - cassandra1
+#        cassandra1:
+#          condition: service_healthy
+#      restart: "no"
+##      entrypoint: ["/scripts/init-db.sh"]
+#      volumes:
+#        - ./scripts/init-db.cql:/scripts/init-db.cql
+##      command: /scripts/init-db.sh
+#      command: /bin/bash -c "echo 'loading cassandra keyspace' && cqlsh -e /scripts/init-db.cql"
 
 volumes:
   cassandra1:
