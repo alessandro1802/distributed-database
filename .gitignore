@@ -1,2 +1,8 @@
 # Cassandra nodes volumes
 cassandra*
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Virtual environment
+venv/
