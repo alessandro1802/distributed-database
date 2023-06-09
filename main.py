@@ -26,21 +26,65 @@ def get_user_choice():
     
     return input("What would you like to do? ")
 
+def show_movies(session):
+    query = f"SELECT * FROM cinema.movies"
+    rows = session.execute(query)
+
+    print(f'MOVIE\tTIME')
+    for row in rows:
+        print(f'{row.movie_name}\t{row.show_timestamp}')
+
+def avaiable_seats(session, movie):
+    all_seats = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+    return all_seats.difference(movie.taken_seats)
+
 def add_reservation(session, username):
     name = f"'{username}'"
 
-    movie = input("Movie name: ")
-    movie = f"'{movie}'"
+    show_movies(session)
+
+    while True:
+        try:
+            movie = input("\nMovie name: ")
+            movie = f"'{movie}'"
+            name = f"'{username}'"
+            query = f"SELECT * FROM cinema.movies WHERE movie_name = {movie} ALLOW FILTERING;"
+            rows = session.execute(query)
+            break
+        except:
+            print("\nWrong movie title was provided. Please try again:")
+
+    free_seats = {}
+    taken_seats = {}
+
+    for row in rows:
+        free_seats = avaiable_seats(session, row)
+        taken_seats = row.taken_seats
+    
+    if len(free_seats) == 0:
+        print("\nThere are no more free seats. Please, select another movie.")
+        return
+    
+    print(f"'\nCurrently avaiable seats: {free_seats}'")
 
     while True:
         try: 
-            seat = int(input("Seat: "))
-            break
+            seat = int(input("\nPick a seat number: "))
+            if seat in free_seats:
+                break
+            else:
+                print("\nPlease take an another seat.")
         except ValueError:
-            print("The Seat number must be an integer. Try again:")
+            print("\nThe Seat number must be an integer. Try again:")
     
     query = f"INSERT INTO cinema.reservations(reservation_id, name, movie_name, reservation_timestamp, seat_number) VALUES (uuid(), {name}, {movie}, toTimestamp(now()), {seat});"
     session.execute(query)
+
+    query = f"UPDATE cinema.movies SET taken_seats = taken_seats + {{{seat}}} WHERE movie_name = {movie};"
+    session.execute(query)
+
+    print("Successfully added your reservation!")
+    time.sleep(1)
 
 def show_your_reservations(session, username):
     name = f"'{username}'"
@@ -121,16 +165,22 @@ def delete_reservation(session, username):
     for row in rows:
         movie = row.movie_name
         movie = f"'{movie}'"
+        seat = int(row.seat_number)
+
     
     display_title_bar()
     
-    query = f"DELETE FROM cinema.reservations WHERE name = {name} AND movie_name = {movie} AND reservation_id = {res_id}"
+    query = f"DELETE FROM cinema.reservations WHERE name = {name} AND movie_name = {movie} AND reservation_id = {res_id} IF EXISTS"
     rows = session.execute(query)
+
+    query = f"UPDATE cinema.movies SET taken_seats = taken_seats - {{{seat}}} WHERE movie_name = {movie};"
+    session.execute(query)
+
+    print("Successfully deleted your reservation!")
+    time.sleep(1)
 
 def quit_database(session):
     print("\nGood bye.")
-    #query = "DROP TABLE Test;"
-    #session.execute(query)
 
 
 ### MAIN ###
