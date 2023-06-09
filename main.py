@@ -55,11 +55,9 @@ def add_reservation(session, username):
             print("\nWrong movie title was provided. Please try again:")
 
     free_seats = {}
-    taken_seats = {}
 
     for row in rows:
         free_seats = avaiable_seats(session, row)
-        taken_seats = row.taken_seats
     
     if len(free_seats) == 0:
         print("\nThere are no more free seats. Please, select another movie.")
@@ -125,23 +123,50 @@ def update_reservation(session, username):
         except:
             print("Wrong reservation id was provided. Please try again:")
 
+    movie = ''
     for row in rows:
         movie = row.movie_name
-        seat = row.seat_number
+        movie = f"'{movie}'"
+        current_seat = int(row.seat_number)
+
+    query = f"SELECT * FROM cinema.movies WHERE movie_name = {movie} ALLOW FILTERING;"
+    rows = session.execute(query)
+
+    free_seats = {}
+
+    for row in rows:
+        free_seats = avaiable_seats(session, row)
+    
+    if len(free_seats) == 0:
+        print("\nThere are no more free seats. You can't change a seat.")
+        time.sleep(1)
+        return
     
     display_title_bar()
 
+    print(f"'\nCurrently avaiable seats: {free_seats}'")
+
     while True:
         try: 
-            seat = int(input("Provide new seat number: "))
-            break
+            new_seat = int(input("Provide new seat number: "))
+            if new_seat in free_seats:
+                break
+            else:
+                print("\nPlease take an another seat.")
         except ValueError:
             print("The Seat number must be an integer. Try again:")
 
-    movie = f"'{movie}'"
-
-    query = f"INSERT INTO cinema.reservations(reservation_id, name, movie_name, reservation_timestamp, seat_number) VALUES ({res_id}, {name}, {movie}, toTimestamp(now()), {seat});"
+    query = f"INSERT INTO cinema.reservations(reservation_id, name, movie_name, reservation_timestamp, seat_number) VALUES ({res_id}, {name}, {movie}, toTimestamp(now()), {new_seat});"
     session.execute(query)
+
+    query = f"UPDATE cinema.movies SET taken_seats = taken_seats + {{{new_seat}}} WHERE movie_name = {movie};"
+    session.execute(query)
+
+    query = f"UPDATE cinema.movies SET taken_seats = taken_seats - {{{current_seat}}} WHERE movie_name = {movie};"
+    session.execute(query)
+
+    print("Successfully updated your reservation!")
+    time.sleep(1)
 
 def delete_reservation(session, username):
     print("Provide id of reservation you want to delete:\n")
