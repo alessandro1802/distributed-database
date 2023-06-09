@@ -30,21 +30,30 @@ def add_reservation(session, username):
     name = f"'{username}'"
 
     movie = input("Movie name: ")
-    movie = f"'{movie}'" 
-    seat = input("Seat: ") #TODO Error Handling
-    
-    query = f"INSERT INTO cinema.reservations(reservation_id, name, movie_name, reservation_timestamp, seat_number) VALUES (uuid(), {name}, {movie}, toTimestamp(now()), {int(seat)});"
-    session.execute(query)
+    movie = f"'{movie}'"
 
+    while True:
+        try: 
+            seat = int(input("Seat: "))
+            break
+        except ValueError:
+            print("The Seat number must be an integer. Try again:")
+    
+    query = f"INSERT INTO cinema.reservations(reservation_id, name, movie_name, reservation_timestamp, seat_number) VALUES (uuid(), {name}, {movie}, toTimestamp(now()), {seat});"
+    session.execute(query)
 
 def show_your_reservations(session, username):
     name = f"'{username}'"
     query = f"SELECT * FROM cinema.reservations WHERE name = {name} ALLOW FILTERING;"
     rows = session.execute(query)
 
+    row_exist = False
     print(f'RES_ID\tMOVIE_TITLE\tSEAT')
     for row in rows:
+        row_exist = True
         print(f'{row.reservation_id}\t{row.movie_name}\t{row.seat_number}')
+
+    return row_exist
 
 def show_all_reservations(session):
     query = f"SELECT * FROM cinema.reservations;"
@@ -56,42 +65,57 @@ def show_all_reservations(session):
 
 def update_reservation(session, username):
     print("Provide id of reservation you want to update:\n")
-    show_your_reservations(session, username)
-    res_id = input("\nRES_ID: ") #TODO Error Handling
-    res_id = f'{res_id}'
+    row_exist_check = show_your_reservations(session, username)
 
-    name = f"'{username}'"
-    query = f"SELECT * FROM cinema.reservations WHERE name = {name} AND reservation_id = {res_id} ALLOW FILTERING;"
-    rows = session.execute(query)
+    if not row_exist_check:
+        print("You don't have any reservations yet. Please add at first a reservation.")
+        return
 
-    seat = -1
+    while True:
+        try:
+            res_id = input("\nRES_ID: ")
+            name = f"'{username}'"
+            query = f"SELECT * FROM cinema.reservations WHERE name = {name} AND reservation_id = {res_id} ALLOW FILTERING;"
+            rows = session.execute(query)
+            break
+        except:
+            print("Wrong reservation id was provided. Please try again:")
 
     for row in rows:
         movie = row.movie_name
         seat = row.seat_number
     
-    if seat < 0:
-        print("Wrong res_id. Redirecting to the menu")
-        time.sleep(1)
-        return
-    
     display_title_bar()
 
-    seat = input("Provide new seat number: ") #TODO Error Handling
+    while True:
+        try: 
+            seat = int(input("Provide new seat number: "))
+            break
+        except ValueError:
+            print("The Seat number must be an integer. Try again:")
+
     movie = f"'{movie}'"
 
-    query = f"INSERT INTO cinema.reservations(reservation_id, name, movie_name, reservation_timestamp, seat_number) VALUES ({res_id}, {name}, {movie}, toTimestamp(now()), {int(seat)});"
+    query = f"INSERT INTO cinema.reservations(reservation_id, name, movie_name, reservation_timestamp, seat_number) VALUES ({res_id}, {name}, {movie}, toTimestamp(now()), {seat});"
     session.execute(query)
 
 def delete_reservation(session, username):
     print("Provide id of reservation you want to delete:\n")
-    show_your_reservations(session, username)
-    res_id = input("\nRES_ID: ") #TODO Error Handling
-    res_id = f'{res_id}'
+    row_exist_check = show_your_reservations(session, username)
 
-    name = f"'{username}'"
-    query = f"SELECT * FROM cinema.reservations WHERE name = {name} AND reservation_id = {res_id} ALLOW FILTERING;"
-    rows = session.execute(query)
+    if not row_exist_check:
+        print("You don't have any reservations yet. Please add at first a reservation.")
+        return
+    
+    while True:
+        try:
+            res_id = input("\nRES_ID: ")
+            name = f"'{username}'"
+            query = f"SELECT * FROM cinema.reservations WHERE name = {name} AND reservation_id = {res_id} ALLOW FILTERING;"
+            rows = session.execute(query)
+            break
+        except:
+            print("Wrong reservation id was provided. Please try again:")
 
     movie = ''
     for row in rows:
@@ -102,7 +126,6 @@ def delete_reservation(session, username):
     
     query = f"DELETE FROM cinema.reservations WHERE name = {name} AND movie_name = {movie} AND reservation_id = {res_id}"
     rows = session.execute(query)
-
 
 def quit_database(session):
     print("\nGood bye.")
@@ -144,5 +167,6 @@ while choice != 'q':
         quit_database(session)
         break
     else:
-        print("\nI don't understand that choice.\n")
+        print("\nI don't understand that choice. Please try again:\n")
+
 
