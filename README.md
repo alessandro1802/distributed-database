@@ -1,4 +1,4 @@
-# distributed-database
+# Cassandra distributed database cinema application
 ## Set-up
 1. Create a `Python 3.8` virtual environment.
 2. Activate it.
@@ -28,7 +28,7 @@ python main.py
 │   └── stress_tests.py       # Stress tests
 ├── scripts                   # Test files
 │   ├── initialize.sh         # Wait for the cluster to load
-│   │                            and start DB initialization
+│   │                           and start DB initialization
 │   └── init-db.cql           # Build the initial DB
 ├── docker-compose.yml        # Docker-compose cluster
 ├── requirements.txt          # Dependencies
