@@ -1,3 +1,6 @@
+# Binaries and other files
+__pycache__/
+
 # Jupyter checkpoints
 .ipynb_checkpoints/
 
